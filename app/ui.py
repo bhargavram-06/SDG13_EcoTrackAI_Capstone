@@ -99,7 +99,6 @@ def run_app():
     if "ai_response" not in st.session_state:
         st.session_state.ai_response = ""
         
-    # Set up static rotation list for everyday climate coaching tips
     climate_tips = [
         "Unplug chargers when devices are fully charged to avoid phantom power drainage.",
         "Transitioning to a plant-forward lunch just twice a week slashes your dietary emissions by 30%.",
@@ -112,7 +111,7 @@ def run_app():
 
     ai_engine = CarbonAIEngine()
 
-    # --- SIDEBAR COMPONENT (UPGRADED DESIGN) ---
+    # --- SIDEBAR COMPONENT ---
     with st.sidebar:
         st.markdown("## 🇺🇳 UN SDG 13 Framework")
         st.info("Goal 13: Climate Action mandates taking urgent action to combat change by reducing greenhouse gas outputs.")
@@ -267,7 +266,7 @@ def run_app():
         st.write("")
         st.warning("⚠️ Input your parameters above and click 'Process Footprint' to compile data.")
 
-    # --- 🛠️ 🌐 OFFICIAL CHATBASE FIXED FLOATING WIDGET INJECTION ---
+    # --- 🛠️ 🌐 OFFICIAL CHATBASE WIDGET INJECTION & CLEANUP CSS ---
     chatbase_script_raw = """
     <script>
     (function(){
@@ -304,6 +303,19 @@ def run_app():
     st.markdown(
         """
         <style>
+        /* 1. Hide the top header bar, GitHub link repo, and Fork menu selectors completely */
+        #MainMenu, header, .stAppDeployButton, [data-testid="stHeader"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* 2. Remove default generic built-with footers entirely */
+        footer {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* 3. Guard invisible component space rules from overriding mobile layout taps */
         iframe[title="streamlit.components.v1.html"] {
             position: fixed !important;
             bottom: 0px !important;

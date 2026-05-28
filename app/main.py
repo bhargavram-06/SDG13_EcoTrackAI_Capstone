@@ -3,43 +3,34 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import streamlit as st
 
-# Load workspace environment variables from .env profile for local development
+# Load workspace environment variables from local profile
 load_dotenv()
 
 class CarbonAIEngine:
     def __init__(self):
         """Initializes the Gemini Core engine safely checking Streamlit Secrets and local env."""
-        # 1. First, check if running on Streamlit Cloud using their native secrets vault
         if "GEMINI_API_KEY" in st.secrets:
             api_key = st.secrets["GEMINI_API_KEY"]
-        # 2. Fallback to local machine environment configuration
         else:
             api_key = os.getenv("GEMINI_API_KEY")
 
         if api_key:
             genai.configure(api_key=api_key)
-            # Utilizing stable high-performance model profile
             self.model = genai.GenerativeModel("gemini-2.5-flash")
         else:
             self.model = None
-            print("CRITICAL WARNING: GEMINI_API_KEY not detected inside active environment system configurations.")
+            print("CRITICAL WARNING: GEMINI_API_KEY not detected inside environment configurations.")
 
     def clean_text_for_compatibility(self, raw_text):
         """Sanitizes text output to make it presentation-grade on mobile layout vectors."""
         if not raw_text:
             return ""
-        # Strip out emojis to prevent text rendering artifacts on basic viewports
         clean_text = raw_text.encode('ascii', 'ignore').decode('ascii')
-        # Filter down double asterisks or layout markups for flat clean lines
         clean_text = clean_text.replace("**", "").replace("* ", " - ").strip()
         return clean_text
 
     def extract_action_items(self, response_text):
-        """
-        Extracts exactly 3 clear, actionable goals from the AI text 
-        to map safely into the Excel spreadsheet and PDF report rows.
-        """
-        # Fallback target lines if engine parsing has unexpected variance
+        """Extracts exactly 3 clear, actionable goals from the AI text."""
         default_actions = [
             "Opt for public transit or carpooling twice this week.",
             "Unplug major household appliances when left on standby mode.",
@@ -49,7 +40,6 @@ class CarbonAIEngine:
         if not response_text:
             return default_actions
             
-        # Parse output looking for list markers or sequential dash layouts
         lines = [line.strip() for line in response_text.split('\n') if line.strip()]
         bullets = []
         
@@ -64,17 +54,10 @@ class CarbonAIEngine:
         return default_actions
 
     def generate_sustainability_plan(self, transport_co2, energy_co2, diet_co2, total_co2, context_dict):
-        """
-        Queries Gemini Core to compile a high-performance sustainability mitigation 
-        matrix in pure compliance with UN SDG 13 framework boundaries.
-        """
+        """Queries Gemini Core to compile a high-performance sustainability mitigation report."""
         if not self.model:
-            return (
-                "AI engine connection offline. Please check your system logs "
-                "to confirm your GEMINI_API_KEY secret string is linked correctly."
-            )
+            return "AI engine connection offline. Verify GEMINI_API_KEY configurations."
 
-        # Formulate highly structured prompt context to govern generation limits
         prompt = f"""
         You are an expert UN SDG 13 Environmental Compliance Auditor. Provide a strict, premium quality carbon mitigation analysis report based on these individual parameters:
         
@@ -99,11 +82,6 @@ class CarbonAIEngine:
             response = self.model.generate_content(prompt)
             return self.clean_text_for_compatibility(response.text)
         except Exception as e:
-            # Smart fallback handling if rate limits or minute caps are encountered during testing
             if "429" in str(e) or "quota" in str(e).lower():
-                return (
-                    "The AI system is taking a quick breath due to rapid usage caps. "
-                    "Your metrics calculated perfectly above! Review your graphical metrics "
-                    "or retry exporting your report centers in a moment."
-                )
+                return "The AI system is taking a quick breath. Please try again in a moment."
             return f"Environmental Analysis Engine Connection Fault: {str(e)}"
