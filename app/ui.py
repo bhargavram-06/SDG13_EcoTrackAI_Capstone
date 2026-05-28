@@ -91,7 +91,7 @@ def run_app():
         page_title="EcoTrack AI: Advanced SDG 13 Portal", 
         page_icon="🌱",
         layout="centered", 
-        initial_sidebar_state="collapsed"
+        initial_sidebar_state="expanded"
     )
     
     if "calculated" not in st.session_state:
