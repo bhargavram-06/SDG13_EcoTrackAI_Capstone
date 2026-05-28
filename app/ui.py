@@ -86,7 +86,7 @@ def generate_professional_pdf(total, transport, energy, diet, score, badge, vehi
     return pdf_buffer.getvalue()
 
 def run_app():
-    # Centered clean responsive layout
+    # Centered clean responsive layout with sidebar expanded by default
     st.set_page_config(
         page_title="EcoTrack AI: Advanced SDG 13 Portal", 
         page_icon="🌱",
@@ -112,7 +112,7 @@ def run_app():
 
     ai_engine = CarbonAIEngine()
 
-    # --- 🇺🇳 SIDEBAR COMPONENT (RESTORED & EXPANDED) ---
+    # --- 🇺🇳 SIDEBAR COMPONENT ---
     with st.sidebar:
         st.markdown("## 🇺🇳 UN SDG 13 Framework")
         st.info("Goal 13: Climate Action mandates taking urgent action to combat change by reducing greenhouse gas outputs.")
@@ -267,7 +267,7 @@ def run_app():
         st.write("")
         st.warning("⚠️ Input your parameters above and click 'Process Footprint' to compile data.")
 
-    # --- 🛠️ 🌐 CHATBASE SCRIPT & STYLING OVERRIDES ---
+    # --- 🛠️ 🌐 CHATBASE SCRIPT & STYLING CONFIGURATIONS ---
     chatbase_script_raw = """
     <script>
     (function(){
@@ -304,13 +304,13 @@ def run_app():
     st.markdown(
         """
         <style>
-        /* Hide the default Streamlit repository indicators, fork options, and header bands */
-        #MainMenu, header, .stAppDeployButton, [data-testid="stHeader"] {
-            display: none !important;
-            visibility: hidden !important;
+        /* Keep all top menu header icons, fork options, and tools completely visible */
+        [data-testid="stHeader"] {
+            display: flex !important;
+            visibility: visible !important;
         }
         
-        /* Clear out the hosting footer blocks completely */
+        /* Remove default generic hosting footers entirely */
         footer {
             display: none !important;
             visibility: hidden !important;
