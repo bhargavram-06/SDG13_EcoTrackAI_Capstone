@@ -99,6 +99,7 @@ def run_app():
     if "ai_response" not in st.session_state:
         st.session_state.ai_response = ""
         
+    # Standard environmental coaching guidelines for sidebar injection
     climate_tips = [
         "Unplug chargers when devices are fully charged to avoid phantom power drainage.",
         "Transitioning to a plant-forward lunch just twice a week slashes your dietary emissions by 30%.",
@@ -111,7 +112,7 @@ def run_app():
 
     ai_engine = CarbonAIEngine()
 
-    # --- SIDEBAR COMPONENT ---
+    # --- 🇺🇳 SIDEBAR COMPONENT (RESTORED & EXPANDED) ---
     with st.sidebar:
         st.markdown("## 🇺🇳 UN SDG 13 Framework")
         st.info("Goal 13: Climate Action mandates taking urgent action to combat change by reducing greenhouse gas outputs.")
@@ -121,7 +122,7 @@ def run_app():
         st.caption("Key focus areas of the SDG 13 infrastructure tracking framework:")
         st.markdown("""
         * **Target 13.1:** Strengthen resilience and adaptive capacity to climate-related hazards.
-        * **Target 13.2:** Integrate climate change measures into national policies and strategic planning.
+        * **Target 13.2:** Integrate climate change measures into policies and strategic planning.
         * **Target 13.3:** Improve human institutional capacity on climate mitigation and impact reduction.
         """)
         
@@ -266,7 +267,7 @@ def run_app():
         st.write("")
         st.warning("⚠️ Input your parameters above and click 'Process Footprint' to compile data.")
 
-    # --- 🛠️ 🌐 OFFICIAL CHATBASE WIDGET INJECTION & CLEANUP CSS ---
+    # --- 🛠️ 🌐 CHATBASE SCRIPT & STYLING OVERRIDES ---
     chatbase_script_raw = """
     <script>
     (function(){
@@ -303,19 +304,19 @@ def run_app():
     st.markdown(
         """
         <style>
-        /* 1. Hide the top header bar, GitHub link repo, and Fork menu selectors completely */
+        /* Hide the default Streamlit repository indicators, fork options, and header bands */
         #MainMenu, header, .stAppDeployButton, [data-testid="stHeader"] {
             display: none !important;
             visibility: hidden !important;
         }
         
-        /* 2. Remove default generic built-with footers entirely */
+        /* Clear out the hosting footer blocks completely */
         footer {
             display: none !important;
             visibility: hidden !important;
         }
         
-        /* 3. Guard invisible component space rules from overriding mobile layout taps */
+        /* Protect component iframe bounding areas from masking page elements */
         iframe[title="streamlit.components.v1.html"] {
             position: fixed !important;
             bottom: 0px !important;
