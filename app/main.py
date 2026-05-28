@@ -1,14 +1,21 @@
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
+import streamlit as st
 
-# Load workspace environment variables from .env profile
+# Load workspace environment variables from .env profile for local development
 load_dotenv()
 
 class CarbonAIEngine:
     def __init__(self):
-        """Initializes the Gemini Core engine safely using local token keys."""
-        api_key = os.getenv("GEMINI_API_KEY")
+        """Initializes the Gemini Core engine safely checking Streamlit Secrets and local env."""
+        # 1. First, check if running on Streamlit Cloud using their native secrets vault
+        if "GEMINI_API_KEY" in st.secrets:
+            api_key = st.secrets["GEMINI_API_KEY"]
+        # 2. Fallback to local machine environment configuration
+        else:
+            api_key = os.getenv("GEMINI_API_KEY")
+
         if api_key:
             genai.configure(api_key=api_key)
             # Utilizing stable high-performance model profile
@@ -63,8 +70,8 @@ class CarbonAIEngine:
         """
         if not self.model:
             return (
-                "AI engine connection offline. Please check your local server system logs "
-                "to confirm your GEMINI_API_KEY environment string is linked."
+                "AI engine connection offline. Please check your system logs "
+                "to confirm your GEMINI_API_KEY secret string is linked correctly."
             )
 
         # Formulate highly structured prompt context to govern generation limits
