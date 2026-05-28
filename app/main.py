@@ -1,60 +1,102 @@
+import os
 import google.generativeai as genai
-from config.settings import Settings
+from dotenv import load_dotenv
+
+# Load workspace environment variables from .env profile
+load_dotenv()
 
 class CarbonAIEngine:
     def __init__(self):
-        # Initialize Google Gemini using credentials loaded from settings
-        if Settings.validate_config():
-            genai.configure(api_key=Settings.GEMINI_API_KEY)
-            
-            # Universal configuration setup that bypasses routing issues
-            try:
-                self.model = genai.GenerativeModel(model_name=Settings.MODEL_NAME)
-                self.is_active = True
-            except Exception:
-                # Secondary immediate fallback if your SDK library is an older build
-                self.model = genai.GenerativeModel('gemini-pro')
-                self.is_active = True
+        """Initializes the Gemini Core engine safely using local token keys."""
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key:
+            genai.configure(api_key=api_key)
+            # Utilizing stable high-performance model profile
+            self.model = genai.GenerativeModel("gemini-2.5-flash")
         else:
-            self.is_active = False
             self.model = None
+            print("CRITICAL WARNING: GEMINI_API_KEY not detected inside active environment system configurations.")
 
-    def generate_sustainability_plan(self, transport_co2, energy_co2, diet_co2, total_co2, inputs):
-        if not self.is_active:
-            return (
-                "⚠️ AI Engine Offline: Please configure a valid GEMINI_API_KEY inside your local '.env' file."
-            )
-        
-        # Build a structured data context frame for the AI model
-        prompt = f"""
-        You are an expert Sustainability Consultant specializing in UN SDG 13 (Climate Action).
-        Analyze the following individual user carbon footprint profile metrics:
-        
-        - Transportation Emissions: {transport_co2:.2f} kg CO2/day (Traveling {inputs['distance']} km via {inputs['vehicle']})
-        - Household Electricity Emissions: {energy_co2:.2f} kg CO2/day (Consuming {inputs['electricity']} kWh/month)
-        - Dietary Footprint: {diet_co2:.2f} kg CO2/day ({inputs['diet']})
-        - Combined Daily Footprint: {total_co2:.2f} kg CO2/day
-        
-        Provide a professional climate mitigation response containing:
-        1. **Executive Evaluation**: Summary of their profile.
-        2. **Top Impact Reduction Target**: Identify their highest sector and give clear behavioral shifts.
-        3. **Quantifiable Milestone Plan**: Goals to lower this footprint by 20% over the next 30 days.
-        Keep it motivating and professional.
+    def clean_text_for_compatibility(self, raw_text):
+        """Sanitizes text output to make it presentation-grade on mobile layout vectors."""
+        if not raw_text:
+            return ""
+        # Strip out emojis to prevent text rendering artifacts on basic viewports
+        clean_text = raw_text.encode('ascii', 'ignore').decode('ascii')
+        # Filter down double asterisks or layout markups for flat clean lines
+        clean_text = clean_text.replace("**", "").replace("* ", " - ").strip()
+        return clean_text
+
+    def extract_action_items(self, response_text):
         """
+        Extracts exactly 3 clear, actionable goals from the AI text 
+        to map safely into the Excel spreadsheet and PDF report rows.
+        """
+        # Fallback target lines if engine parsing has unexpected variance
+        default_actions = [
+            "Opt for public transit or carpooling twice this week.",
+            "Unplug major household appliances when left on standby mode.",
+            "Substitute one heavy meat meal with a green plant-based alternative."
+        ]
         
+        if not response_text:
+            return default_actions
+            
+        # Parse output looking for list markers or sequential dash layouts
+        lines = [line.strip() for line in response_text.split('\n') if line.strip()]
+        bullets = []
+        
+        for line in lines:
+            if line.startswith('-') or line.startswith('*') or (line[:1].isdigit() and line[1:2] in ['.', ')']):
+                cleaned_bullet = line.lstrip('-*0123456789.) ').strip()
+                if cleaned_bullet and len(cleaned_bullet) > 10:
+                    bullets.append(cleaned_bullet)
+                    
+        if len(bullets) >= 3:
+            return bullets[:3]
+        return default_actions
+
+    def generate_sustainability_plan(self, transport_co2, energy_co2, diet_co2, total_co2, context_dict):
+        """
+        Queries Gemini Core to compile a high-performance sustainability mitigation 
+        matrix in pure compliance with UN SDG 13 framework boundaries.
+        """
+        if not self.model:
+            return (
+                "AI engine connection offline. Please check your local server system logs "
+                "to confirm your GEMINI_API_KEY environment string is linked."
+            )
+
+        # Formulate highly structured prompt context to govern generation limits
+        prompt = f"""
+        You are an expert UN SDG 13 Environmental Compliance Auditor. Provide a strict, premium quality carbon mitigation analysis report based on these individual parameters:
+        
+        USER CARBON PROFILE METRICS:
+        - Daily Transportation Commute: {context_dict.get('vehicle', 'Unknown Mode')} pulling {transport_co2:.2f} kg CO2e/day (Total distance: {context_dict.get('distance', 0)} km)
+        - Household Power Grid Consumption: {context_dict.get('electricity', 0)} kWh/Month pulling {energy_co2:.2f} kg CO2e/day
+        - Dietary Habits Profile: {context_dict.get('diet', 'Unknown')} profile pulling {diet_co2:.2f} kg CO2e/day
+        - Combined Daily Footprint Accumulated: {total_co2:.2f} kg CO2e
+        - Calculated Platform Sustainability Rank: {context_dict.get('badge', 'Auditor Tier')} (Score: {context_dict.get('green_score', 50)}/100)
+
+        REPORT COMPLIANCE REQUIREMENT STRUCTURE:
+        1. Write a brief overview summary explaining what these numbers signify for climate action (under 3 lines).
+        2. Provide exactly 3 short, concrete weekly actionable items to lower this specific footprint. Start each action item with a dash (-) character.
+        
+        CRITICAL STYLING LIMITS:
+        - Talk naturally and professionally.
+        - Do NOT include any technical code, programming terms, database details, or code logic variables.
+        - Do NOT use any emojis or markdown symbols like asterisks (**).
+        """
+
         try:
-            # Explicit content generation call syntax
-            response = self.model.generate_content(contents=prompt)
-            return response.text
+            response = self.model.generate_content(prompt)
+            return self.clean_text_for_compatibility(response.text)
         except Exception as e:
-            # Fallback mock text generator if your API Key is restricted by regional project rules
-            return f"""🌱 **EcoTrack AI Local Advisor Insight (API Fallback Engine Active):**
-            
-            1. **Executive Evaluation**: Your total footprint is {total_co2:.2f} kg CO2e/day. Your highest impact sector is your {inputs['diet']} diet ({diet_co2:.2f} kg CO2e), followed by electricity consumption.
-            
-            2. **Top Impact Reduction Target**: Focus on reducing your food footprint and power bills. Transitioning from an '{inputs['diet']}' framework to a vegetarian-focused or low-meat style twice a week will instantly slash your daily food emissions by up to 30%. 
-            
-            3. **30-Day Milestone Action Plan**:
-            • Swap traditional home incandescent bulbs for smart LED options to cut your {inputs['electricity']} kWh usage.
-            • Practice efficient car trip bundling for your {inputs['vehicle']} to lower travel distances below {inputs['distance'] - 5} km.
-            • Continue tracking your metrics daily via the dashboard to help advance United Nations SDG 13!"""
+            # Smart fallback handling if rate limits or minute caps are encountered during testing
+            if "429" in str(e) or "quota" in str(e).lower():
+                return (
+                    "The AI system is taking a quick breath due to rapid usage caps. "
+                    "Your metrics calculated perfectly above! Review your graphical metrics "
+                    "or retry exporting your report centers in a moment."
+                )
+            return f"Environmental Analysis Engine Connection Fault: {str(e)}"
